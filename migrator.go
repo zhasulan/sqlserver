@@ -10,14 +10,15 @@ import (
 
 type Migrator struct {
 	migrator.Migrator
+	SchemaName string
 }
 
 func (m Migrator) HasTable(value interface{}) bool {
 	var count int
 	m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		return m.DB.Raw(
-			"SELECT count(*) FROM INFORMATION_SCHEMA.tables WHERE table_name = ? AND table_catalog = ?",
-			stmt.Table, m.CurrentDatabase(),
+			"SELECT count(*) FROM INFORMATION_SCHEMA.tables WHERE table_name = ? AND table_catalog = ? AND table_schema = ?",
+			stmt.Table, m.CurrentDatabase(), m.SchemaName,
 		).Row().Scan(&count)
 	})
 	return count > 0
@@ -93,8 +94,8 @@ func (m Migrator) HasColumn(value interface{}, field string) bool {
 		}
 
 		return m.DB.Raw(
-			"SELECT count(*) FROM INFORMATION_SCHEMA.columns WHERE table_catalog = ? AND table_name = ? AND column_name = ?",
-			currentDatabase, stmt.Table, name,
+			"SELECT count(*) FROM INFORMATION_SCHEMA.columns WHERE table_catalog = ? AND table_schema = ? AND table_name = ? AND column_name = ?",
+			currentDatabase, m.SchemaName, stmt.Table, name,
 		).Row().Scan(&count)
 	})
 
@@ -171,8 +172,8 @@ func (m Migrator) HasConstraint(value interface{}, name string) bool {
 		}
 
 		return m.DB.Raw(
-			`SELECT count(*) FROM sys.foreign_keys as F inner join sys.tables as T on F.parent_object_id=T.object_id inner join information_schema.tables as I on I.TABLE_NAME = T.name WHERE F.name = ?  AND T.Name = ? AND I.TABLE_CATALOG = ?;`,
-			name, table, m.CurrentDatabase(),
+			`SELECT count(*) FROM sys.foreign_keys as F inner join sys.tables as T on F.parent_object_id=T.object_id inner join information_schema.tables as I on I.TABLE_NAME = T.name WHERE F.name = ?  AND T.Name = ? AND I.TABLE_CATALOG = ? AND I.TABLE_SCHEMA = ?;`,
+			name, table, m.CurrentDatabase(), m.SchemaName,
 		).Row().Scan(&count)
 	})
 	return count > 0

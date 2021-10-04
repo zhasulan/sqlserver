@@ -21,6 +21,7 @@ type Config struct {
 	DSN               string
 	DefaultStringSize int
 	Conn              gorm.ConnPool
+	SchemaName        string
 }
 
 type Dialector struct {
@@ -105,11 +106,14 @@ func (dialector Dialector) DefaultValueOf(field *schema.Field) clause.Expression
 }
 
 func (dialector Dialector) Migrator(db *gorm.DB) gorm.Migrator {
-	return Migrator{migrator.Migrator{Config: migrator.Config{
-		DB:                          db,
-		Dialector:                   dialector,
-		CreateIndexAfterCreateTable: true,
-	}}}
+	return Migrator{
+		migrator.Migrator{Config: migrator.Config{
+			DB:                          db,
+			Dialector:                   dialector,
+			CreateIndexAfterCreateTable: true,
+		}},
+		dialector.SchemaName,
+	}
 }
 
 func (dialector Dialector) BindVarTo(writer clause.Writer, stmt *gorm.Statement, v interface{}) {
