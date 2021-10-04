@@ -1,4 +1,4 @@
-module gorm.io/driver/sqlserver
+module github.com/zhasulan/sqlserver
 
 go 1.14
 
