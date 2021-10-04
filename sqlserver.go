@@ -32,8 +32,8 @@ func (dialector Dialector) Name() string {
 	return "sqlserver"
 }
 
-func Open(dsn string) gorm.Dialector {
-	return &Dialector{Config: &Config{DSN: dsn}}
+func Open(dsn, schemaName string) gorm.Dialector {
+	return &Dialector{Config: &Config{DSN: dsn, SchemaName: schemaName}}
 }
 
 func New(config Config) gorm.Dialector {
